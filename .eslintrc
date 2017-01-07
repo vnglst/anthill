@@ -34,7 +34,7 @@
     ],
     "flowtype/require-valid-file-annotation": 2,
     "flowtype/semi": [
-      2,
+      0,
       "always"
     ],
     "flowtype/space-after-type-colon": [

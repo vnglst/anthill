@@ -1,16 +1,19 @@
 /* @flow */
 /* eslint-env jest */
 
-import { Ant, Wall, generateWorld } from './Ant'
+import { World, Wall, Ant } from './Ant'
 
-const world = generateWorld()
+describe('Creating a world', () => {
+  const world = new World(10, 20)
 
-it('should create an Ant', () => {
-  const ant = new Ant(2, 2)
-  expect(ant).toBeInstanceOf(Ant)
-
-  it('getView should return a view', () => {
-    const view = ant.getView(world)
-    expect(view).toBeInstanceOf(Wall)
+  it('should create an Ant', () => {
+    expect(world).toBeInstanceOf(World)
   })
+  const ant1 = new Ant(2, 2)
+  const wall1 = new Wall(2, 1)
+  world.add(ant1)
+  world.add(wall1)
+  console.log(world.toStr())
+  console.log(world.getView(0, 0, 2))
 })
+
