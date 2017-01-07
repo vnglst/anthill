@@ -1,21 +1,60 @@
 /* @flow */
 'use strict'
 
-type GridType = Array<Array<Thing>>
-
-const createMatrix = (width: number, height: number, Default: any): GridType =>
-    Array(width)
-      .fill()
-      .map((): Array<Thing> =>
+const createMatrix = (width: number, height: number, Default: any): Array<Array<any>> =>
+  Array(width)
+    .fill()
+    .map((): Array<Thing> =>
       Array(height)
         .fill(new Default()))
+
+class Grid {
+  space: Array<Array<any>>
+  constructor (width: number, height: number, Default: any) {
+    this.space = createMatrix(width, height, Default)
+  }
+  get (x: number, y: number): Object {
+    return this.space[x][y]
+  }
+  set (x: number, y: number, obj: Object) {
+    this.space[x][y] = obj
+  }
+}
+
+class PheroGrid extends Grid {
+  toStr: Function
+  toStr (): string {
+    let str: string = ''
+    this.space.forEach((column: Array<Object>) => {
+      str += '\n'
+      column.forEach((phero: Phero) => {
+        str += `${phero.ant.toFixed(2)} `
+      })
+    })
+    return str
+  }
+}
+
+class ThingGrid extends Grid {
+  toStr: Function
+  toStr (): string {
+    let str: string = ''
+    this.space.forEach((column: Array<Object>) => {
+      str += '\n'
+      column.forEach((thing: Thing) => {
+        str += thing.char
+      })
+    })
+    return str
+  }
+}
 
 export class World {
   width: number
   height: number
-  grid: GridType
-  add: Function
-  moveTo: Function
+  thingGrid: ThingGrid
+  pheroGrid: PheroGrid
+  set: Function
   get: Function
   toStr: Function
   getView: Function
@@ -23,25 +62,18 @@ export class World {
   constructor (width: number, height: number) {
     this.width = width
     this.height = height
-    this.grid = createMatrix(width, height, Empty)
+    this.thingGrid = new ThingGrid(width, height, Empty)
+    this.pheroGrid = new PheroGrid(width, height, Phero)
   }
 }
 
-World.prototype.add = function (thing: Thing) {
-  if (thing) this.grid[thing.x][thing.y] = thing
-}
-
-World.prototype.moveTo = function (thing: Thing, newX: number, newY: number) {
-  if (thing) {
-    thing.x = newX
-    thing.y = newY
-    this.grid[newX][newY] = thing
-  }
+World.prototype.set = function (thing: Thing) {
+  if (thing) this.thingGrid.set(thing.x, thing.y, thing)
 }
 
 World.prototype.get = function (x: number, y: number): ?Thing {
   if (x < 0 || x > this.width || y < 0 || y > this.height) return null
-  return this.grid[x][y]
+  return this.thingGrid.get(x, y)
 }
 
 World.prototype.getView = function (xCor: number, yCor: number, radius: number): Array<Thing> {
@@ -56,14 +88,18 @@ World.prototype.getView = function (xCor: number, yCor: number, radius: number):
 }
 
 World.prototype.toStr = function (): string {
-  let str: string = ''
-  this.grid.forEach((column: Array<Object>) => {
-    str += '\n'
-    column.forEach((thing: Thing) => {
-      str += thing.char
-    })
-  })
-  return str
+  return this.thingGrid.toStr() + '\n\n' + this.pheroGrid.toStr()
+}
+
+export class Phero {
+  danger: number
+  ant: number
+  food: number
+  constructor () {
+    this.danger = Math.random() * 10
+    this.ant = Math.random() * 10
+    this.food = Math.random() * 10
+  }
 }
 
 export class Thing {
