@@ -1,37 +1,37 @@
 /* @flow */
+'use strict'
 
-type ThingType = Wall | Ant | Void
-type WorldType = Array<Array<ThingType>>
+type GridType = Array<Array<Thing>>
 
-// Refactor this using .fill from ES6
-const createMatrix = (width: number, height: number, DefaultValue: any): Array<Array<any>> => {
-  const arr = []
-  // Creates all lines:
-  for (let i = 0; i < width; i++) {
-    // Creates an empty line
-    arr.push([])
-    // Adds cols to the empty line:
-    arr[i].push(new Array(height))
-    for (let j = 0; j < height; j++) {
-      // Initializes:
-      arr[i][j] = new DefaultValue(i, j)
-    }
+const createMatrix = (width: number, height: number, Default: any): GridType =>
+    Array(width)
+      .fill()
+      .map((): Array<Thing> =>
+      Array(height)
+        .fill(new Default()))
+
+export class World {
+  width: number
+  height: number
+  grid: GridType
+  add: Function
+  moveTo: Function
+  get: Function
+  toStr: Function
+  getView: Function
+
+  constructor (width: number, height: number) {
+    this.width = width
+    this.height = height
+    this.grid = createMatrix(width, height, Empty)
   }
-  return arr
 }
 
-export const World = function (width: number, height: number) {
-  this.width = width
-  this.height = height
-  const grid: WorldType = createMatrix(width, height, Void)
-  this.grid = grid
-}
-
-World.prototype.add = function (thing: ThingType) {
+World.prototype.add = function (thing: Thing) {
   if (thing) this.grid[thing.x][thing.y] = thing
 }
 
-World.prototype.moveTo = function (thing: ThingType, newX: number, newY: number) {
+World.prototype.moveTo = function (thing: Thing, newX: number, newY: number) {
   if (thing) {
     thing.x = newX
     thing.y = newY
@@ -39,12 +39,12 @@ World.prototype.moveTo = function (thing: ThingType, newX: number, newY: number)
   }
 }
 
-World.prototype.get = function (x: number, y: number): ?ThingType {
+World.prototype.get = function (x: number, y: number): ?Thing {
   if (x < 0 || x > this.width || y < 0 || y > this.height) return null
   return this.grid[x][y]
 }
 
-World.prototype.getView = function (xCor: number, yCor: number, radius: number): Array<ThingType> {
+World.prototype.getView = function (xCor: number, yCor: number, radius: number): Array<Thing> {
   const view = []
   for (let x: number = -radius; x <= radius; x++) {
     for (let y: number = -radius; y <= radius; y++) {
@@ -57,32 +57,42 @@ World.prototype.getView = function (xCor: number, yCor: number, radius: number):
 
 World.prototype.toStr = function (): string {
   let str: string = ''
-  this.grid.forEach((column: Array<ThingType>) => {
+  this.grid.forEach((column: Array<Object>) => {
     str += '\n'
-    column.forEach((thing: ThingType) => {
+    column.forEach((thing: Thing) => {
       str += thing.char
     })
   })
   return str
 }
 
-export const Wall = function (x: number, y: number) {
-  this.x = x
-  this.y = y
-  this.description = 'Wall'
-  this.char = '#'
+export class Thing {
+  x: number
+  y: number
+  description: string
+  char: string
+  constructor (x: number, y: number) {
+    this.x = x
+    this.y = y
+    this.description = 'empty'
+    this.char = '_'
+  }
 }
 
-export const Void = function (x: number, y: number) {
-  this.x = x
-  this.y = y
-  this.description = 'Void'
-  this.char = '_'
+export class Empty extends Thing { }
+
+export class Ant extends Thing {
+  constructor (x: number, y: number) {
+    super(x, y)
+    this.description = 'Ant'
+    this.char = 'o'
+  }
 }
 
-export const Ant = function (x: number, y: number) {
-  this.x = x
-  this.y = y
-  this.description = 'Ant'
-  this.char = 'o'
+export class Wall extends Thing {
+  constructor (x: number, y: number) {
+    super(x, y)
+    this.description = 'Wall'
+    this.char = '0'
+  }
 }
