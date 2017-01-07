@@ -10,6 +10,7 @@ const createMatrix = (width: number, height: number, Default: any): Array<Array<
 
 class Grid {
   space: Array<Array<any>>
+  
   constructor (width: number, height: number, Default: any) {
     this.space = createMatrix(width, height, Default)
   }
@@ -23,6 +24,7 @@ class Grid {
 
 class PheroGrid extends Grid {
   toStr: Function
+  
   toStr (): string {
     let str: string = ''
     this.space.forEach((column: Array<Object>) => {
@@ -37,6 +39,7 @@ class PheroGrid extends Grid {
 
 class ThingGrid extends Grid {
   toStr: Function
+  
   toStr (): string {
     let str: string = ''
     this.space.forEach((column: Array<Object>) => {
@@ -58,37 +61,33 @@ export class World {
   get: Function
   toStr: Function
   getView: Function
-
+  
   constructor (width: number, height: number) {
     this.width = width
     this.height = height
     this.thingGrid = new ThingGrid(width, height, Empty)
     this.pheroGrid = new PheroGrid(width, height, Phero)
   }
-}
-
-World.prototype.set = function (thing: Thing) {
-  if (thing) this.thingGrid.set(thing.x, thing.y, thing)
-}
-
-World.prototype.get = function (x: number, y: number): ?Thing {
-  if (x < 0 || x > this.width || y < 0 || y > this.height) return null
-  return this.thingGrid.get(x, y)
-}
-
-World.prototype.getView = function (xCor: number, yCor: number, radius: number): Array<Thing> {
-  const view = []
-  for (let x: number = -radius; x <= radius; x++) {
-    for (let y: number = -radius; y <= radius; y++) {
-      const thing = this.get(xCor + x, yCor + y)
-      if (thing) view.push(thing)
-    }
+  set (thing: Thing) {
+    if (thing) this.thingGrid.set(thing.x, thing.y, thing)
   }
-  return view
-}
-
-World.prototype.toStr = function (): string {
-  return this.thingGrid.toStr() + '\n\n' + this.pheroGrid.toStr()
+  get (x: number, y: number): ?Thing {
+    if (x < 0 || x > this.width || y < 0 || y > this.height) return null
+    return this.thingGrid.get(x, y)
+  }
+  getView (xCor: number, yCor: number, radius: number): Array<Thing> {
+    const view = []
+    for (let x: number = -radius; x <= radius; x++) {
+      for (let y: number = -radius; y <= radius; y++) {
+        const thing = this.get(xCor + x, yCor + y)
+        if (thing) view.push(thing)
+      }
+    }
+    return view
+  }
+  toStr (): string {
+    return this.thingGrid.toStr() + '\n\n' + this.pheroGrid.toStr()
+  }
 }
 
 export class Phero {
@@ -117,18 +116,18 @@ export class Thing {
 
 export class Empty extends Thing { }
 
-export class Ant extends Thing {
-  constructor (x: number, y: number) {
-    super(x, y)
-    this.description = 'Ant'
-    this.char = 'o'
-  }
-}
-
 export class Wall extends Thing {
   constructor (x: number, y: number) {
     super(x, y)
     this.description = 'Wall'
     this.char = '0'
+  }
+}
+
+export class Ant extends Thing {
+  constructor (x: number, y: number) {
+    super(x, y)
+    this.description = 'Ant'
+    this.char = 'o'
   }
 }

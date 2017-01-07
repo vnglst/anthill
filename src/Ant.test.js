@@ -11,20 +11,20 @@ describe('Creating a world', () => {
   })
 
   it('It should contain a grid, with ', () => {
-    expect(world.grid).toBeDefined()
-    expect(world.grid.get(5, 5)).toBeInstanceOf(Empty)
+    expect(world.thingGrid).toBeDefined()
+    expect(world.get(5, 5)).toBeInstanceOf(Empty)
   })
 
   const ant1 = new Ant(2, 2)
   world.set(ant1)
   it('It should contain an Ant', () => {
-    expect(world.grid.get(2, 2)).toBeInstanceOf(Ant)
+    expect(world.get(2, 2)).toBeInstanceOf(Ant)
   })
 
   const wall1 = new Wall(2, 1)
   world.set(wall1)
   it('It should contain a Wall', () => {
-    expect(world.grid.get(2, 1)).toBeInstanceOf(Wall)
+    expect(world.get(2, 1)).toBeInstanceOf(Wall)
   })
 
   console.log(world.toStr())
