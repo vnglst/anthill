@@ -10,21 +10,23 @@ const createMatrix = (width: number, height: number, Default: any): Array<Array<
 
 class Grid {
   space: Array<Array<any>>
-  
+  width: number
+  height: number
   constructor (width: number, height: number, Default: any) {
+    this.width = width
+    this.height = height
     this.space = createMatrix(width, height, Default)
   }
-  get (x: number, y: number): Object {
-    return this.space[x][y]
+  get (position: Vector): ?Object {
+    if (position.x < 0 || position.x > this.width || position.y < 0 || position.y > this.height) return null
+    return this.space[position.x][position.y]
   }
-  set (x: number, y: number, obj: Object) {
-    this.space[x][y] = obj
+  set (position: Vector, obj: Object) {
+    this.space[position.x][position.y] = obj
   }
 }
 
 class PheroGrid extends Grid {
-  toStr: Function
-  
   toStr (): string {
     let str: string = ''
     this.space.forEach((column: Array<Object>) => {
@@ -38,8 +40,6 @@ class PheroGrid extends Grid {
 }
 
 class ThingGrid extends Grid {
-  toStr: Function
-  
   toStr (): string {
     let str: string = ''
     this.space.forEach((column: Array<Object>) => {
@@ -53,34 +53,26 @@ class ThingGrid extends Grid {
 }
 
 export class World {
-  width: number
-  height: number
   thingGrid: ThingGrid
   pheroGrid: PheroGrid
-  set: Function
-  get: Function
-  toStr: Function
-  getView: Function
-  
   constructor (width: number, height: number) {
-    this.width = width
-    this.height = height
     this.thingGrid = new ThingGrid(width, height, Empty)
     this.pheroGrid = new PheroGrid(width, height, Phero)
   }
-  set (thing: Thing) {
-    if (thing) this.thingGrid.set(thing.x, thing.y, thing)
+  set (position: Vector, thing: Thing) {
+    if (thing) this.thingGrid.set(position, thing)
   }
-  get (x: number, y: number): ?Thing {
-    if (x < 0 || x > this.width || y < 0 || y > this.height) return null
-    return this.thingGrid.get(x, y)
+  get (position: Vector): ?Thing {
+    return this.thingGrid.get(position)
   }
-  getView (xCor: number, yCor: number, radius: number): Array<Thing> {
+  getView ({ position, radius }: {position: Vector, radius: number}): Array<Thing> {
     const view = []
     for (let x: number = -radius; x <= radius; x++) {
       for (let y: number = -radius; y <= radius; y++) {
-        const thing = this.get(xCor + x, yCor + y)
-        if (thing) view.push(thing)
+        const v: Vector = new Vector(x, y)
+        const thing = this.thingGrid.get(position.add(v))
+        const phero = this.pheroGrid.get(position.add(v))
+        if (thing) view.push({x, y, ...phero, ...thing})
       }
     }
     return view
@@ -101,32 +93,42 @@ export class Phero {
   }
 }
 
-export class Thing {
+export class Vector {
   x: number
   y: number
-  description: string
-  char: string
   constructor (x: number, y: number) {
     this.x = x
     this.y = y
+  }
+  add (vector: Vector): Vector {
+    return new Vector(this.x + vector.x, this.y + vector.y)
+  }
+}
+
+export class Thing {
+  description: string
+  char: string
+  constructor () {
     this.description = 'empty'
-    this.char = '_'
+    this.char = '.'
   }
 }
 
 export class Empty extends Thing { }
 
 export class Wall extends Thing {
-  constructor (x: number, y: number) {
-    super(x, y)
+  constructor () {
+    super()
     this.description = 'Wall'
     this.char = '0'
   }
 }
 
 export class Ant extends Thing {
-  constructor (x: number, y: number) {
-    super(x, y)
+  position: Vector
+  constructor (position: Vector) {
+    super()
+    this.position = position
     this.description = 'Ant'
     this.char = 'o'
   }
