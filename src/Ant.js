@@ -1,6 +1,8 @@
 /* @flow */
 'use strict'
 
+declare type View = Array<{ position: Vector, thing: ?Thing, phero: ?Phero }>
+
 const createMatrix = (width: number, height: number, Default: any): Array<Array<any>> =>
   Array(width)
     .fill()
@@ -9,16 +11,16 @@ const createMatrix = (width: number, height: number, Default: any): Array<Array<
         .fill(new Default()))
 
 class Grid {
-  space: Array<Array<any>>
+  space: Array<Array<Phero | Thing>>
   width: number
   height: number
-  constructor (width: number, height: number, Default: any) {
+  constructor (width: number, height: number, Default: Class<Phero> | Class<Thing>) {
     this.width = width
     this.height = height
     this.space = createMatrix(width, height, Default)
   }
   get (position: Vector): ?Object {
-    if (position.x < 0 || position.x > this.width || position.y < 0 || position.y > this.height) return null
+    if (position.x < 0 || position.x > this.width || position.y < 0 || position.y > this.height) return undefined
     return this.space[position.x][position.y]
   }
   set (position: Vector, obj: Object) {
@@ -65,14 +67,18 @@ export class World {
   get (position: Vector): ?Thing {
     return this.thingGrid.get(position)
   }
-  getView ({ position, radius }: {position: Vector, radius: number}): Array<Thing> {
+  getView ({ position, radius }: {position: Vector, radius: number}): Array<{
+    position: Vector,
+    thing: ?Thing,
+    phero: ?Phero
+    }> {
     const view = []
     for (let x: number = -radius; x <= radius; x++) {
       for (let y: number = -radius; y <= radius; y++) {
-        const v: Vector = new Vector(x, y)
-        const thing = this.thingGrid.get(position.add(v))
-        const phero = this.pheroGrid.get(position.add(v))
-        if (thing) view.push({x, y, ...phero, ...thing})
+        const newPosition = position.add(new Vector(x, y))
+        const thing = this.thingGrid.get(newPosition)
+        const phero = this.pheroGrid.get(newPosition)
+        if (thing !== undefined) view.push({position: newPosition, phero, thing})
       }
     }
     return view
@@ -108,28 +114,44 @@ export class Vector {
 export class Thing {
   description: string
   char: string
-  constructor () {
-    this.description = 'empty'
-    this.char = '.'
+  position: Vector
+  world: World
+  constructor (position: Vector, world: World) {
+    this.description = 'not set'
+    this.char = 'not defined'
+    this.world = world
+    this.position = position
   }
 }
 
-export class Empty extends Thing { }
+export class Empty extends Thing {
+  constructor (position: Vector, world: World) {
+    super(position, world)
+    this.description = 'empty'
+    this.char = '.'
+    this.world = world
+    this.position = position
+  }
+}
 
 export class Wall extends Thing {
-  constructor () {
-    super()
+  constructor (position: Vector, world: World) {
+    super(position, world)
     this.description = 'Wall'
-    this.char = '0'
+    this.char = 'W'
+    this.world.set(position, this)
   }
 }
 
 export class Ant extends Thing {
   position: Vector
-  constructor (position: Vector) {
-    super()
-    this.position = position
+  constructor (position: Vector, world: World) {
+    super(position, world)
     this.description = 'Ant'
-    this.char = 'o'
+    this.char = 'A'
+    this.world.set(position, this)
+  }
+  getView (): View {
+    return this.world.getView({position: this.position, radius: 1})
   }
 }
