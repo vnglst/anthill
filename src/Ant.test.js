@@ -35,7 +35,6 @@ describe('Creating a world', () => {
     const view = world.getView({position: new Vector(2, 2), radius: 1})
     it('should contain 9 elements', () => {
       expect(view).toHaveLength(9)
-    // console.log(view)
     })
 
     it('should contain contain an Ant with position 2, 2', () => {
@@ -51,7 +50,7 @@ describe('Creating a world', () => {
     it('should contain 9 elements', () => {
       expect(view).toHaveLength(9)
     })
-    
+
     it('should contain contain the ant with position 2, 2', () => {
       expect(view[4].thing).toBeInstanceOf(Ant)
       expect(view[4].position).toBeInstanceOf(Vector)
@@ -60,6 +59,27 @@ describe('Creating a world', () => {
     })
   })
 
-  console.log('World: ', world.toStr())
+  describe('Testing ant.possibleMoves', () => {
+    it('should list only possibleMoves', () => {
+      const view = ant1.getView()
+      const possibleMoves = ant1.filterPossible(view)
+      expect(possibleMoves).toHaveLength(7)
+    })
+  })
+
+  describe('Testing ant.moveTo', () => {
+    it('should have moved the ant', () => {
+      const moveTo = new Vector(3, 3)
+      ant1.moveTo(moveTo)
+      expect(world.get(moveTo)).toEqual(ant1)
+    })
+  })
+
+  describe('Testing ant.act', () => {
+    it('should have moved to another position', () => {
+      ant1.act()
+      console.log(world.toStr())
+    })
+  })
 })
 
