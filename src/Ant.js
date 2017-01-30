@@ -58,9 +58,21 @@ class ThingGrid extends Grid {
 export class World {
   thingGrid: ThingGrid
   pheroGrid: PheroGrid
+  ants: Array<Ant>
+  basePos: Vector
   constructor (width: number, height: number) {
     this.thingGrid = new ThingGrid(width, height, Empty)
     this.pheroGrid = new PheroGrid(width, height, Phero)
+    this.basePos = new Vector(Math.round(width / 2), Math.round(height / 2))
+    this.ants = []
+  }
+  createAnts (number: number) {
+    for (let i = 0; i < number; i++) {
+      this.ants.push(new Ant(this.basePos, this))
+    }
+  }
+  turn () {
+    this.ants.forEach((ant: Ant): void => ant.act())
   }
   set (position: Vector, thing: Thing) {
     if (thing) this.thingGrid.set(position, thing)
@@ -121,7 +133,7 @@ export class Empty {
   char: string
   constructor () {
     this.description = 'empty'
-    this.char = ' '
+    this.char = '.'
   }
 }
 
@@ -161,15 +173,19 @@ export class Ant extends Thing {
   act () {
     const view = this.getView()
     const possibleMoves = this.filterPossible(view)
-    const sorted = this.sortOnFood(possibleMoves)
-    const newPosition = sorted[0].position
-    this.moveTo(newPosition)
+    if (possibleMoves.length) {
+      let sorted = this.sortOn(possibleMoves, 'ant')
+      sorted = this.sortOn(possibleMoves, 'danger')
+      sorted = this.sortOn(possibleMoves, 'food')
+      const newPosition = sorted[0].position
+      this.moveTo(newPosition)
+    }
   }
   filterPossible (view: View): View {
     return view.filter((viewElement: ViewElement): boolean => viewElement.thing instanceof Empty)
   }
-  sortOnFood (view: View): View {
-    return view.sort((a: ViewElement, b: ViewElement): number => a.phero.food < b.phero.food ? 1 : -1)
+  sortOn (view: View, what: string): View {
+    return view.sort((a: ViewElement, b: ViewElement): number => a.phero[what] < b.phero[what] ? 1 : -1)
   }
   moveTo (newPosition: Vector) {
     const oldPosition = this.position
@@ -177,7 +193,14 @@ export class Ant extends Thing {
     this.world.set(newPosition, this)
     this.world.set(oldPosition, new Empty(oldPosition, this.world))
     const oldPhero = this.world.pheroGrid.get(oldPosition)
-    oldPhero.food = 0
+    const { food, ant, danger } = oldPhero
+    if (food) {
+      oldPhero.food -= 1
+    } else if (danger) {
+      oldPhero.danger -= 1
+    } else if (ant) {
+      oldPhero.ant += 1
+    }
     this.world.pheroGrid.set(oldPosition, oldPhero)
   }
 }
